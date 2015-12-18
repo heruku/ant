@@ -16,4 +16,10 @@ defmodule Direction do
       delta_x > 0 -> :e
     end
   end
+
+  def random_target do
+    x = Enum.random(-25..25)
+    y = Enum.random(-25..25)
+    {x, y}
+  end
 end
