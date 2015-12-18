@@ -7,8 +7,9 @@ defmodule Ant do
 
   def loop(state) do
     receive do
-      :move    -> move(state)
-      :go_home -> go_home(state)
+      :move              -> move(state)
+      :go_home           -> go_home(state)
+      :random_target     -> random_target(state)
       {:target, target}  -> set_target(state, target)
     end
   end
@@ -18,14 +19,13 @@ defmodule Ant do
     |> move_towards(state)
   end
 
+  def random_target(state) do
+    set_target(state, Direction.random_target)
+  end
+
   def move(state) do
-    direction = Direction.to(state[:location], state[:target])
-    if direction == :arrived do
-      send self(), {:target, Direction.random_target}
-      loop(state)
-    else
-      move_towards(direction, state)
-    end
+    Direction.to(state[:location], state[:target])
+    |> move_towards(state)
   end
 
   def set_target(state, location) do
@@ -34,12 +34,16 @@ defmodule Ant do
 
   defp move_towards(direction, state) do
     new_state = World.go(state[:id], direction)
-    :timer.sleep(1000)
     proceed(Map.merge(state, new_state))
   end
 
   defp proceed(state = %{got_food: true}) do
     send self(), :go_home
+    loop(state)
+  end
+
+  defp proceed(state = %{location: pos, target: pos}) do
+    send self(), :random_target
     loop(state)
   end
 
